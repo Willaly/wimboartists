@@ -1032,6 +1032,170 @@
   }
   .pane-tag.artist { background: var(--ink); color: white; }
   .pane-tag.client { background: var(--rausch); color: white; }
+
+  /* ================================================================
+     RESPONSIVE MOBILE — media queries pour smartphones et tablettes
+     ================================================================ */
+  @media (max-width: 900px) {
+    /* Header : cacher la nav pill centrale, alléger les CTAs */
+    .app-header {
+      padding: 12px 16px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .app-header .nav-pills { display: none; }
+    .app-header .header-right { gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .app-header .header-link {
+      padding: 8px 12px !important;
+      font-size: 13px !important;
+    }
+    .app-header .logo { font-size: 20px; }
+
+    /* Hero : réduire les tailles */
+    .hero { padding: 40px 20px 32px; }
+    .hero h1 { font-size: 32px !important; line-height: 1.15; }
+    .hero .accent { display: inline; }
+    .hero-sub { font-size: 15px; }
+    .hero-eyebrow { font-size: 11px; }
+
+    /* Search pill : passer en colonne */
+    .search-pill {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      padding: 8px !important;
+      max-width: 100% !important;
+      border-radius: 16px !important;
+    }
+    .search-pill .search-section {
+      padding: 10px 14px !important;
+      border-right: none !important;
+      border-bottom: 1px solid var(--line);
+      text-align: left !important;
+    }
+    .search-pill .search-section:last-of-type { border-bottom: none; }
+    .search-pill .search-btn {
+      width: 100% !important;
+      padding: 14px !important;
+      justify-content: center !important;
+      margin-top: 4px;
+    }
+
+    /* Catégories : scroll horizontal */
+    .categories {
+      overflow-x: auto;
+      padding: 16px 12px !important;
+      gap: 20px !important;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Trust-strip : scroll horizontal + tailles réduites */
+    .trust-strip {
+      overflow-x: auto;
+      padding: 24px 12px !important;
+      gap: 24px !important;
+      -webkit-overflow-scrolling: touch;
+      flex-wrap: nowrap;
+    }
+    .trust-item { flex-shrink: 0; min-width: 100px; }
+    .trust-num { font-size: 22px !important; }
+    .trust-lbl { font-size: 11px !important; }
+
+    /* USP grid : 1 colonne */
+    .usp-section { padding: 40px 16px !important; }
+    .usp-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+    .usp-card { padding: 20px !important; }
+    .usp-card h3 { font-size: 18px; }
+
+    /* Comment ça marche : 1 colonne */
+    #comment-ca-marche { padding: 48px 20px !important; }
+    #comment-ca-marche h2 { font-size: 28px !important; }
+    #comment-ca-marche > div > div[style*="grid-template-columns"] {
+      grid-template-columns: 1fr !important;
+      gap: 16px !important;
+    }
+
+    /* Sections dashboard */
+    .dashboard-wrap { padding: 16px !important; }
+    .dashboard-header {
+      flex-direction: column;
+      align-items: flex-start !important;
+      gap: 12px;
+    }
+    .dashboard-greeting h1 { font-size: 22px !important; }
+    .kpi-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+    .kpi-value { font-size: 22px !important; }
+    .kpi-card { padding: 14px !important; }
+    .dashboard-grid { grid-template-columns: 1fr !important; }
+
+    /* Nav pills dashboard : scroll horizontal */
+    #dash-tabs, nav.nav-pills {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      padding-bottom: 4px;
+    }
+
+    /* Filter bar résultats */
+    .filter-bar {
+      padding: 14px 12px !important;
+      gap: 6px !important;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      -webkit-overflow-scrolling: touch;
+      white-space: nowrap;
+    }
+    .filter-chip { font-size: 12px !important; padding: 6px 12px !important; }
+
+    /* Artist grid : cards plus compactes */
+    .artist-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important; gap: 12px !important; }
+    .artist-name { font-size: 14px !important; }
+    .artist-meta { font-size: 12px !important; }
+    .artist-price { font-size: 13px !important; }
+
+    /* Formulaires inscription : 1 colonne, cacher aside */
+    .form-page-wrap { grid-template-columns: 1fr !important; gap: 16px !important; padding: 16px !important; }
+    .form-page-wrap aside { display: none; }
+    .form-grid-2 { grid-template-columns: 1fr !important; }
+    .stepper { flex-wrap: wrap; gap: 4px !important; padding: 12px !important; }
+    .step { font-size: 11px !important; }
+
+    /* Profile screen */
+    .profile-wrap { padding: 16px !important; }
+    .profile-title { font-size: 22px !important; }
+    .profile-body { grid-template-columns: 1fr !important; }
+    .gallery {
+      grid-template-columns: 1fr !important;
+      grid-template-rows: repeat(5, 180px) !important;
+      grid-template-areas: "a" "b" "c" "d" "e" !important;
+    }
+    .gallery > div { grid-area: unset !important; }
+
+    /* Footer */
+    .footer-cols, .footer-grid { grid-template-columns: 1fr !important; gap: 20px !important; padding: 24px 16px !important; }
+
+    /* Sélecteur pays flottant : plus discret */
+    #country-widget {
+      bottom: 10px !important;
+      right: 10px !important;
+      padding: 4px 8px !important;
+      font-size: 11px !important;
+    }
+    #country-widget .country-select { font-size: 11px !important; }
+
+    /* Summary card devis : non sticky sur mobile */
+    .summary-card { position: static !important; }
+
+    /* Container général */
+    .container, .container-wide { padding: 0 12px !important; }
+  }
+
+  @media (max-width: 480px) {
+    .app-header .header-link { padding: 6px 10px !important; font-size: 12px !important; }
+    .kpi-grid { grid-template-columns: 1fr !important; }
+    .hero h1 { font-size: 26px !important; }
+    #comment-ca-marche h2 { font-size: 24px !important; }
+  }
 </style>
 </head>
 <body>
@@ -3062,6 +3226,32 @@
 
     const greet = document.getElementById('dash-greeting');
     if (greet) greet.innerHTML = 'Bonjour ' + (a.firstName || a.stageName || 'artiste') + ' 👋';
+
+    // Détection compte démo : garde les KPIs et données de démonstration hardcoded
+    const isDemoAccount = (a.email || '').toLowerCase() === 'demo@wimbo.dev';
+    if (isDemoAccount) {
+      // Hydrate juste le nom en haut + Mon profil, laisse le reste (KPIs, demandes, planning, revenus) rempli d'origine
+      const summary = document.getElementById('dash-summary');
+      if (summary) summary.textContent = '3 demandes en attente · 5 prestations à venir · Membre PREMIUM';
+
+      // Hydrate l'onglet Mon profil avec les vraies données
+      const setInput = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+      const disciplineLabels = { chanteur:'Chanteur / Chanteuse', musicien:'Musicien / instrumentiste', groupe:'Groupe / formation', dj:'DJ', quatuor:'Quatuor classique' };
+      setInput('dprof-stagename', a.stageName);
+      setInput('dprof-discipline', disciplineLabels[a.discipline] || a.discipline || '');
+      setInput('dprof-city', a.city);
+      setInput('dprof-radius', a.radiusKm);
+      setInput('dprof-bio', a.bio || '');
+      setInput('dprof-insta', a.portfolioInstagram || '');
+      setInput('dprof-yt', a.portfolioYoutube || '');
+      setInput('dprof-sc', a.portfolioSoundcloud || '');
+      setInput('dprof-site', a.portfolioWebsite || '');
+      setInput('dprof-price-base', a.basePrice);
+      setInput('dprof-price-duo', a.basePrice ? Math.round(a.basePrice * 1.5) : '');
+      setInput('dprof-price-trio', a.basePrice ? Math.round(a.basePrice * 2) : '');
+      setInput('dprof-travel', a.radiusKm);
+      return; // ne pas remettre les KPIs à 0
+    }
 
     const summary = document.getElementById('dash-summary');
     if (summary) summary.textContent = 'Aucune demande en attente · Wimbo ouvre publiquement en janvier 2027';
