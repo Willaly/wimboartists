@@ -3230,11 +3230,42 @@
     // Détection compte démo : garde les KPIs et données de démonstration hardcoded
     const isDemoAccount = (a.email || '').toLowerCase() === 'demo@wimbo.dev';
     if (isDemoAccount) {
-      // Hydrate juste le nom en haut + Mon profil, laisse le reste (KPIs, demandes, planning, revenus) rempli d'origine
+      // Sous-titre du header dashboard
       const summary = document.getElementById('dash-summary');
       if (summary) summary.textContent = '3 demandes en attente · 5 prestations à venir · Membre PREMIUM';
 
-      // Hydrate l'onglet Mon profil avec les vraies données
+      // KPIs de démonstration (valeurs qui donnent envie)
+      const setText = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+      setText('kpi-pending', '3');
+      setText('kpi-pending-sub', 'Délai de réponse moyen 6h');
+      setText('kpi-confirmed', '7');
+      setText('kpi-revenue', '5 240 €');
+      setText('kpi-rating', '<span class="star">★</span> 4,9');
+      setText('kpi-rating-sub', '47 avis');
+
+      // Onglet Demandes : sous-titre + filtres avec les vrais compteurs
+      const reqSummary = document.getElementById('req-summary');
+      if (reqSummary) reqSummary.textContent = '3 en attente · 2 devis envoyés · 12 archives';
+      const reqFilters = document.getElementById('req-filters');
+      if (reqFilters) {
+        reqFilters.innerHTML = '<button class="filter-chip active">Toutes (17)</button><button class="filter-chip">En attente (3)</button><button class="filter-chip">Devis envoyé (2)</button><button class="filter-chip">Confirmées (5)</button><button class="filter-chip">Archivées (7)</button>';
+      }
+
+      // Onglet Planning : titre correct
+      const upcomingTitle = document.getElementById('planning-upcoming-title');
+      if (upcomingTitle) upcomingTitle.textContent = 'Prestations à venir (5)';
+
+      // Onglet Revenus : rester sur les valeurs par défaut du HTML (5240€, 14800€, 62400€, 701€)
+      const setText2 = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+      setText2('rev-month', '5 240 €');
+      setText2('rev-month-sub', '7 prestations réalisées');
+      setText2('rev-quarter', '14 800 €');
+      setText2('rev-quarter-sub', '21 prestations');
+      setText2('rev-total', '62 400 €');
+      setText2('rev-total-sub', '89 prestations');
+      setText2('rev-avg', '701 €');
+
+      // Hydrate l'onglet Mon profil avec les vraies données Supabase
       const setInput = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
       const disciplineLabels = { chanteur:'Chanteur / Chanteuse', musicien:'Musicien / instrumentiste', groupe:'Groupe / formation', dj:'DJ', quatuor:'Quatuor classique' };
       setInput('dprof-stagename', a.stageName);
