@@ -3175,6 +3175,8 @@
     if (!SUPABASE_READY || !sb) return;
     try {
       const row = {
+        // Utilise l'UID Auth si présent, sinon Postgres génère un UUID random
+        id: u.id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(u.id) ? u.id : undefined,
         first_name: u.firstName,
         last_name: u.lastName,
         email: u.email,
@@ -3189,7 +3191,7 @@
         notif_newsletter: u.notifications?.newsletter ?? false,
         notif_partners: u.notifications?.partners ?? false,
       };
-      const { data, error } = await sb.from('users').insert(row).select().single();
+      const { data, error } = await sb.from('users').upsert(row, { onConflict: 'id' }).select().single();
       if (error) {
         console.warn('[Wimbo] Insert user Supabase KO :', error.message);
         console.warn('[Wimbo] → As-tu exécuté le SQL "Wimbo - SQL ajout table users (client).sql" ?');
@@ -3478,11 +3480,18 @@
       const uid = data.user?.id;
       console.log('[Wimbo] ✓ Connexion Auth réussie :', uid);
 
-      // Récupérer la fiche artiste depuis Supabase
-      const { data: artistData, error: artErr } = await sb.from('artists').select('*, photos:artist_photos(*)').eq('id', uid).maybeSingle();
+      // Récupérer les 2 profils en parallèle (cloisonnement : un compte auth peut avoir un profil artiste ET/OU un profil utilisateur)
+      const [artistRes, userRes] = await Promise.all([
+        sb.from('artists').select('*, photos:artist_photos(*)').eq('id', uid).maybeSingle(),
+        sb.from('users').select('*').eq('id', uid).maybeSingle()
+      ]);
+      const artistData = artistRes.data;
+      const userData = userRes.data;
+
+      // Convertir artistData → format local si présent
+      let localArtist = null;
       if (artistData) {
-        // Convertir Supabase → format local
-        const localArtist = {
+        localArtist = {
           id: artistData.id,
           firstName: artistData.first_name,
           lastName: artistData.last_name,
@@ -3501,6 +3510,11 @@
           basePrice: artistData.base_price_eur,
           legalStatus: artistData.legal_status,
           siret: artistData.siret_or_id,
+          bio: artistData.bio,
+          portfolioInstagram: artistData.portfolio_instagram,
+          portfolioYoutube: artistData.portfolio_youtube,
+          portfolioSoundcloud: artistData.portfolio_soundcloud,
+          portfolioWebsite: artistData.portfolio_website,
           photos: (artistData.photos || []).sort((a,b)=>a.position-b.position).map(p => ({ dataUrl: p.public_url, name: 'photo', isMain: p.is_main })),
           status: artistData.status,
           isPremium: artistData.status === 'validated',
@@ -3509,24 +3523,44 @@
           reviewsCount: 0
         };
         DB.saveArtist(localArtist);
-        DB.setSession({ type: 'artist', id: uid });
+      }
+      // Convertir userData → format local si présent
+      let localUser = null;
+      if (userData) {
+        localUser = {
+          id: userData.id,
+          firstName: userData.first_name,
+          lastName: userData.last_name,
+          email: userData.email,
+          phone: userData.phone,
+          city: userData.city,
+          country: userData.country,
+          preferredEvents: userData.preferred_events || [],
+          preferredStyles: userData.preferred_styles || [],
+          averageBudget: userData.average_budget_eur
+        };
+        DB.saveUser(localUser);
+      }
+
+      // 3 cas : les 2 profils, artiste seul, utilisateur seul, aucun
+      if (localArtist && localUser) {
+        // DOUBLE PROFIL — Proposer le choix
+        okEl.style.display = 'none';
+        errEl.style.display = 'none';
+        showRoleChoice(uid, localArtist, localUser);
+      } else if (localArtist) {
+        DB.setSession({ type: 'artist', id: uid, activeRole: 'artist' });
         okEl.textContent = 'Connexion réussie ! Redirection vers votre tableau de bord…';
         okEl.style.display = 'block';
         setTimeout(() => { goTo('dashboard'); updateSessionUI(); }, 800);
+      } else if (localUser) {
+        DB.setSession({ type: 'user', id: uid, activeRole: 'user' });
+        okEl.textContent = 'Connexion réussie ! Redirection…';
+        okEl.style.display = 'block';
+        setTimeout(() => { goTo('results'); updateSessionUI(); }, 800);
       } else {
-        // Chercher côté users
-        const { data: userData } = await sb.from('users').select('*').eq('email', email).maybeSingle();
-        if (userData) {
-          const localUser = { id: userData.id, firstName: userData.first_name, lastName: userData.last_name, email: userData.email, phone: userData.phone, city: userData.city, country: userData.country };
-          DB.saveUser(localUser);
-          DB.setSession({ type: 'user', id: userData.id });
-          okEl.textContent = 'Connexion réussie ! Redirection…';
-          okEl.style.display = 'block';
-          setTimeout(() => { goTo('results'); updateSessionUI(); }, 800);
-        } else {
-          errEl.textContent = 'Compte authentifié mais aucun profil trouvé. Contactez le support.';
-          errEl.style.display = 'block';
-        }
+        errEl.textContent = 'Compte authentifié mais aucun profil trouvé. Contactez le support.';
+        errEl.style.display = 'block';
       }
     } catch (e) {
       errEl.textContent = 'Erreur : ' + e.message;
@@ -3535,6 +3569,42 @@
       btn.disabled = false; btn.textContent = 'Se connecter →';
     }
   }
+
+  /* Affiche un choix visuel entre les 2 rôles (double profil) */
+  function showRoleChoice(uid, artist, user) {
+    const container = document.querySelector('#screen-login .browser-content > div');
+    if (!container) return;
+    container.innerHTML = `
+      <div style="max-width: 640px; margin: 60px auto; padding: 40px; background: white; border-radius: var(--radius-lg); box-shadow: var(--shadow-card);">
+        <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 8px 0;">Bienvenue ${artist.firstName} 👋</h1>
+        <p style="color: var(--ink-soft); font-size: 15px; margin: 0 0 28px 0;">Vous avez un compte artiste ET un compte utilisateur. Comment souhaitez-vous continuer ?</p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div onclick="continueAs('artist', '${uid}')" style="padding: 24px; border: 2px solid var(--line); border-radius: 16px; cursor: pointer; transition: all .15s; text-align: center;" onmouseover="this.style.borderColor='var(--rausch)'" onmouseout="this.style.borderColor='var(--line)'">
+            <div style="font-size: 36px; margin-bottom: 12px;">🎤</div>
+            <div style="font-weight: 700; font-size: 17px; margin-bottom: 6px;">Vue Artiste</div>
+            <div style="font-size: 13px; color: var(--ink-soft); margin-bottom: 12px;">${artist.stageName}</div>
+            <div style="font-size: 12px; color: var(--rausch); font-weight: 600;">Gérer mes demandes, mon profil, mes revenus</div>
+          </div>
+          <div onclick="continueAs('user', '${uid}')" style="padding: 24px; border: 2px solid var(--line); border-radius: 16px; cursor: pointer; transition: all .15s; text-align: center;" onmouseover="this.style.borderColor='var(--rausch)'" onmouseout="this.style.borderColor='var(--line)'">
+            <div style="font-size: 36px; margin-bottom: 12px;">✨</div>
+            <div style="font-weight: 700; font-size: 17px; margin-bottom: 6px;">Vue Utilisateur</div>
+            <div style="font-size: 13px; color: var(--ink-soft); margin-bottom: 12px;">${user.firstName} ${user.lastName}</div>
+            <div style="font-size: 12px; color: var(--rausch); font-weight: 600;">Rechercher un artiste, envoyer une demande</div>
+          </div>
+        </div>
+
+        <p style="font-size: 12px; color: var(--ink-light); text-align: center; margin-top: 24px;">Vous pourrez basculer entre les 2 vues à tout moment via le menu ☰ en haut à droite.</p>
+      </div>
+    `;
+  }
+
+  window.continueAs = function(role, uid) {
+    DB.setSession({ type: role, id: uid, activeRole: role });
+    updateSessionUI();
+    if (role === 'artist') goTo('dashboard');
+    else goTo('results');
+  };
 
   async function doResetPassword() {
     const email = document.getElementById('login-email').value.trim().toLowerCase();
@@ -3572,7 +3642,14 @@
           registeredAt: artistData.registered_at, rating: '4.9', reviewsCount: 0
         };
         DB.saveArtist(localArtist);
-        if (!DB.currentSession()) DB.setSession({ type: 'artist', id: uid });
+        if (!DB.currentSession()) {
+          // Détecter aussi un profil utilisateur pour ce même UID
+          const { data: userDataToo } = await sb.from('users').select('*').eq('id', uid).maybeSingle();
+          if (userDataToo) {
+            DB.saveUser({ id: userDataToo.id, firstName: userDataToo.first_name, lastName: userDataToo.last_name, email: userDataToo.email, phone: userDataToo.phone, city: userDataToo.city, country: userDataToo.country });
+          }
+          DB.setSession({ type: 'artist', id: uid, activeRole: 'artist' });
+        }
         console.log('[Wimbo] ✓ Session Supabase restaurée pour artiste :', uid);
         updateSessionUI();
       }
@@ -3655,8 +3732,16 @@
     const menu = document.createElement('div');
     menu.className = 'user-menu';
     menu.style.cssText = 'position: absolute; top: calc(100% + 8px); right: 0; background: white; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.12); border: 1px solid var(--line); min-width: 220px; z-index: 200; overflow: hidden;';
-    const connectedArtist = DB.connectedArtist ? DB.connectedArtist() : null;
-    const connectedUser = DB.connectedUser ? DB.connectedUser() : null;
+    const session = DB.currentSession ? DB.currentSession() : null;
+    // Récupérer les 2 profils du compte auth (double rôle possible)
+    const uid = session?.id;
+    const artistProfile = uid ? DB.artists().find(x => x.id === uid) : null;
+    const userProfile = uid ? DB.users().find(x => x.id === uid) : null;
+    const hasBothRoles = artistProfile && userProfile;
+    const activeRole = session?.activeRole || session?.type;
+    // Ancienne API pour compat
+    const connectedArtist = (activeRole === 'artist') ? artistProfile : null;
+    const connectedUser = (activeRole === 'user') ? userProfile : null;
     let items = '';
     if (connectedArtist) {
       items = `
@@ -3666,6 +3751,7 @@
         </div>
         <a onclick="viewArtistProfile('${connectedArtist.id}'); document.querySelectorAll('.user-menu').forEach(m=>m.remove());" style="display: block; padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--line-light);">👤 Mon profil public</a>
         <a onclick="goTo('dashboard'); document.querySelectorAll('.user-menu').forEach(m=>m.remove());" style="display: block; padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--line-light);">📊 Mon tableau de bord</a>
+        ${hasBothRoles ? '<a onclick="continueAs(\'user\', \''+uid+'\'); document.querySelectorAll(\'.user-menu\').forEach(m=>m.remove());" style="display: block; padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--line-light); background: var(--bg-soft);">🔄 Basculer en vue Utilisateur</a>' : ''}
         <a onclick="DB.clearSession(); document.querySelectorAll('.user-menu').forEach(m=>m.remove()); goTo('home');" style="display: block; padding: 12px 16px; cursor: pointer; font-size: 14px; color: var(--rausch);">🚪 Se déconnecter</a>
       `;
     } else if (connectedUser) {
@@ -3675,6 +3761,7 @@
           <div style="font-size: 12px; color: var(--ink-soft);">${connectedUser.email}</div>
         </div>
         <a onclick="goTo('results'); document.querySelectorAll('.user-menu').forEach(m=>m.remove());" style="display: block; padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--line-light);">🔍 Rechercher un artiste</a>
+        ${hasBothRoles ? '<a onclick="continueAs(\'artist\', \''+uid+'\'); document.querySelectorAll(\'.user-menu\').forEach(m=>m.remove());" style="display: block; padding: 12px 16px; cursor: pointer; font-size: 14px; border-bottom: 1px solid var(--line-light); background: var(--bg-soft);">🔄 Basculer en vue Artiste</a>' : ''}
         <a onclick="DB.clearSession(); document.querySelectorAll('.user-menu').forEach(m=>m.remove()); goTo('home');" style="display: block; padding: 12px 16px; cursor: pointer; font-size: 14px; color: var(--rausch);">🚪 Se déconnecter</a>
       `;
     } else {
@@ -3761,14 +3848,20 @@
       // Déconnexion Supabase Auth aussi (silencieux si pas prêt)
       if (typeof sb !== 'undefined' && sb && sb.auth) sb.auth.signOut().catch(() => {});
     },
+    activeRole() { const s = DB.currentSession(); return s?.activeRole || s?.type || null; },
     connectedArtist() {
       const s = DB.currentSession();
-      if (!s || s.type !== 'artist') return null;
+      if (!s) return null;
+      // Respecte activeRole si présent (double profil), sinon type
+      const role = s.activeRole || s.type;
+      if (role !== 'artist') return null;
       return DB.artists().find(a => a.id === s.id) || null;
     },
     connectedUser() {
       const s = DB.currentSession();
-      if (!s || s.type !== 'user') return null;
+      if (!s) return null;
+      const role = s.activeRole || s.type;
+      if (role !== 'user') return null;
       return DB.users().find(u => u.id === s.id) || null;
     }
   };
@@ -4109,18 +4202,53 @@
     chip.addEventListener('click', e => { e.preventDefault(); chip.classList.toggle('active'); });
   });
 
-  function userSubmit() {
+  async function userSubmit() {
+    try {
     const events = Array.from(document.querySelectorAll('#usr-events .filter-chip.active')).map(c => c.dataset.userEvent);
     const styles = Array.from(document.querySelectorAll('#usr-styles .filter-chip.active')).map(c => c.dataset.userStyle);
-
     const firstName = document.getElementById('usr-firstname').value.trim();
+    const email = document.getElementById('usr-email').value.trim().toLowerCase();
+    const password = document.getElementById('usr-password').value;
+
+    // ÉTAPE AUTH : créer OU récupérer un compte Supabase Auth pour lier user + artist sous le même UID
+    let authUid = null;
+    if (SUPABASE_READY && sb) {
+      const btn = document.querySelector('button[onclick="userNext(4)"]');
+      if (btn) { btn.disabled = true; btn.textContent = 'Création du compte…'; }
+      try {
+        const { data: authData, error: authErr } = await sb.auth.signUp({
+          email, password,
+          options: { data: { first_name: firstName, last_name: document.getElementById('usr-lastname').value.trim() } }
+        });
+        if (authErr) {
+          const msg = (authErr.message || '').toLowerCase();
+          if (msg.includes('already registered') || msg.includes('already exists') || msg.includes('user already')) {
+            // Le compte existe (probablement en tant qu'artiste) → tenter signIn pour récupérer le même UID
+            const { data: signIn, error: signErr } = await sb.auth.signInWithPassword({ email, password });
+            if (signErr) {
+              if (btn) { btn.disabled = false; btn.textContent = 'Créer mon compte ✓'; }
+              return userError('Un compte existe déjà avec cet email mais le mot de passe ne correspond pas. Utilisez le même mot de passe que votre compte artiste, ou "Mot de passe oublié" sur la page de connexion.');
+            }
+            authUid = signIn.user?.id;
+            console.log('[Wimbo] ✓ Compte Auth existant récupéré (double rôle) :', authUid);
+          } else {
+            console.warn('[Wimbo] Supabase Auth signUp user KO :', authErr.message);
+          }
+        } else {
+          authUid = authData.user?.id;
+          console.log('[Wimbo] ✓ Compte Auth Supabase créé (user) :', authUid);
+        }
+      } catch (e) { console.warn('[Wimbo] Exception Auth user :', e); }
+      if (btn) { btn.disabled = false; btn.textContent = 'Créer mon compte ✓'; }
+    }
+
     const user = {
-      id: 'u-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8),
+      id: authUid || (crypto.randomUUID ? crypto.randomUUID() : 'u-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8)),
       firstName,
       lastName: document.getElementById('usr-lastname').value.trim(),
-      email: document.getElementById('usr-email').value.trim().toLowerCase(),
+      email,
       phone: document.getElementById('usr-phone-country').value + ' ' + document.getElementById('usr-phone').value.trim(),
-      password: btoa(document.getElementById('usr-password').value),
+      hasAuthAccount: !!authUid,
       preferredEvents: events,
       preferredStyles: styles,
       city: document.getElementById('usr-city').value.trim(),
@@ -4135,13 +4263,23 @@
       registeredAt: new Date().toISOString()
     };
     DB.saveUser(user);
-    DB.setSession({ type: 'user', id: user.id });
-    // Push async vers Supabase waitlist (silencieux si Supabase pas prêt)
+    // Est-ce qu'un artiste existe avec le même UID (double rôle) ?
+    const hasArtistToo = authUid && DB.artists().find(a => a.id === authUid);
+    DB.setSession({ type: 'user', id: user.id, activeRole: 'user' });
+    // Push async vers Supabase users (silencieux si Supabase pas prêt)
     pushUserToSupabase(user);
     document.getElementById('usr-welcome-name').textContent = firstName;
     userError('');
     userGoStep(5);
     updateSessionUI();
+    if (hasArtistToo) {
+      // Prévenir l'utilisateur qu'il a maintenant les 2 rôles
+      setTimeout(() => alert('Vous avez maintenant un compte utilisateur ET un compte artiste avec cet email. Vous pourrez basculer entre les 2 vues via le menu ☰.'), 500);
+    }
+    } catch (err) {
+      console.error('[Wimbo] userSubmit erreur :', err);
+      userError('Erreur inattendue : ' + err.message);
+    }
   }
 
   /* ============================================================
