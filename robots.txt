@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /espace-artiste
+Disallow: /mon-espace
+
+Sitemap: https://wimboartistes.com/sitemap.xml
