@@ -1228,7 +1228,7 @@ function pHome() {
         '<p class="sub">Trouvez l\'artiste idéal pour votre événement</p>' +
         '<p class="lead">Musiciens, chanteurs, groupes et DJ vérifiés. Devis en 2 à 3 heures, déclaration GUSO et paiement sécurisé inclus.</p>' +
         searchBar() +
-        '<div class="quick"><span>Populaires :</span><a class="chip" href="/evenements/mariage">Mariage</a><a class="chip" href="/evenements/anniversaire">Anniversaire</a><a class="chip" href="/genres/jazz">Jazz</a><a class="chip" href="/instruments/deejay">DJ</a><a class="chip" href="/genres/classique">Quatuor</a><a class="chip" href="/evenements/evenement-diaspora">Fête au pays</a></div>' +
+        '<div class="quick"><span>Populaires :</span><a class="chip" href="/evenements/mariage">Mariage</a><a class="chip" href="/evenements/anniversaire">Anniversaire</a><a class="chip" href="/genres/jazz">Jazz</a><a class="chip" href="/instruments/deejay">DJ</a><a class="chip" href="/evenements/evenement-diaspora">Fête au pays</a></div>' +
       '</div>' +
       '<div data-hpanel="artist" class="artist-tab-panel hide">' +
         '<h1 class="h-xl">Votre art,<span class="accent">leurs émotions</span></h1>' +
