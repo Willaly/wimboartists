@@ -742,3 +742,15 @@ h1, h2, h3 { overflow-wrap: break-word; }
 .survey-actions .link { justify-self: center; background: none; border: 0; color: var(--ink-3); cursor: pointer; padding: 6px; }
 .btn-ghost-dark { background: transparent; border: 1.5px solid var(--line); color: var(--ink); }
 .btn-ghost-dark:hover { border-color: var(--ink); }
+
+/* ---------- v2.10 : page « S'inscrire » ---------- */
+.choose-grid{display:grid;gap:14px;margin-top:22px}
+.choose-card{display:grid;gap:8px;padding:20px 20px 18px;border:1.5px solid var(--line);border-radius:var(--r);background:var(--card);color:var(--ink);text-decoration:none;transition:border-color .15s,transform .15s,box-shadow .15s}
+.choose-card:hover{border-color:var(--bordeaux);transform:translateY(-2px);box-shadow:var(--sh)}
+.choose-card strong{font-size:18px}
+.choose-card .btn{justify-self:start;margin-top:6px}
+.choose-ic{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:var(--ivoire);color:var(--bordeaux)}
+.choose-ic svg{width:20px;height:20px}
+@media (max-width:440px){.header-right .hide-xs{display:none}
+}
+
