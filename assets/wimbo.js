@@ -14,7 +14,7 @@ const BUILD_DATE = '2026-11-16';
 const CONFIG = {
   DEMO_MODE: true,                 // affiche le catalogue d'exemple
   DEMO_NOTICE: true,               // mention discrète en pied de page
-  VERSION: '2.10',
+  VERSION: '2.10.1',
   SITE_URL: 'https://wimboartistes.com',
   CONTACT_EMAIL: 'contact@wimboartistes.com',   // communication
   HELLO_EMAIL: 'hello@wimboartistes.com',       // emails automatiques (mots de passe, notifications)
@@ -951,7 +951,7 @@ function mapArtistRow(r) {
     plan: planOf(r), premium: planOf(r) === 'premium', pro: planOf(r) === 'pro', founder: !!r.is_founder,
     uploadedVideos: (r.videos || []).filter(v => v && v.public_url),
     verified: r.status === 'validated', languages: ['Français'],
-    since: r.registered_at ? new Date(r.registered_at).getFullYear() : new Date().getFullYear(),
+    since: (r.registered_at || r.created_at) ? new Date(r.registered_at || r.created_at).getFullYear() : new Date().getFullYear(),
     bookings: 0, responseTime: '3 h',
     cover: photos[0] || null, avatar: photos[0] || null, gallery: photos, videos: [], videoUrls,
     description: r.bio || '', links: { instagram: r.portfolio_instagram, youtube: r.portfolio_youtube, website: r.portfolio_website },
@@ -2915,7 +2915,7 @@ async function renderAdminTab(tab, st) {
   const box = $('#dash-content'); if (!box) return;
   try {
     if (tab === 'artistes') {
-      const rows = await admQuery(sb.from('artists').select('*, photos:artist_photos(*)').order('registered_at', { ascending: false }));
+      const rows = await admQuery(sb.from('artists').select('*, photos:artist_photos(*)').order('created_at', { ascending: false }));
       const counts = { pending: 0, validated: 0, rejected: 0 }; rows.forEach(r => { counts[r.status] = (counts[r.status] || 0) + 1; });
       admCount('artistes', counts.pending);
       const shown = st === 'all' ? rows : rows.filter(r => r.status === st);
@@ -2944,7 +2944,7 @@ function admArtistCard(r) {
   const inst = parseInstruments(r.main_instrument);
   const price = Number(r.base_price_eur) > 0 ? fmtEUR(Number(r.base_price_eur)) : (isSurDevis(r.base_price_eur) ? 'Sur devis' : '—');
   return '<div class="req adm-art"><div class="adm-head"><div class="adm-ph">' + (photo ? '<img src="' + esc(photo.public_url) + '" alt="">' : '') + '</div><div style="flex:1;min-width:0"><div class="rq-h"><strong>' + esc(name) + '</strong><span style="display:flex;gap:6px;flex-wrap:wrap">' + stBadge(r.status) + '<span class="badge badge-soft">' + esc(pnL(planOf(r))) + '</span>' + (r.is_founder ? '<span class="badge badge-prem">Fondateur</span>' : '') + '</span></div>' +
-    '<div class="rq-meta" style="margin-top:6px"><span>' + ic('mail', 'icon-sm') + esc(r.email || '') + '</span><span>' + esc(r.phone || '') + '</span><span>' + ic('pin', 'icon-sm') + esc(placeLabel({ city: r.city, country: r.country })) + '</span><span>' + ic('calendar', 'icon-sm') + (r.registered_at ? fmtDate(r.registered_at) : '') + '</span></div></div></div>' +
+    '<div class="rq-meta" style="margin-top:6px"><span>' + ic('mail', 'icon-sm') + esc(r.email || '') + '</span><span>' + esc(r.phone || '') + '</span><span>' + ic('pin', 'icon-sm') + esc(placeLabel({ city: r.city, country: r.country })) + '</span><span>' + ic('calendar', 'icon-sm') + ((r.registered_at || r.created_at) ? fmtDate(r.registered_at || r.created_at) : '') + '</span></div></div></div>' +
     '<div class="rq-meta"><span>' + ic('music', 'icon-sm') + esc(inst.slugs.map(k => cL(k)).concat(inst.extra).join(', ') || '—') + '</span><span>' + esc(mapStyles(r.styles).map(g => gL(g)).join(', ')) + '</span><span>' + ic('euro', 'icon-sm') + price + '</span><span>' + T('{n} photo(s)', { n: (r.photos || []).length }) + '</span></div>' +
     (r.bio ? '<p class="rq-msg">' + esc(String(r.bio).slice(0, 400)) + (String(r.bio).length > 400 ? '…' : '') + '</p>' : '') +
     '<div class="rq-act">' + (r.status !== 'validated' ? '<button class="btn btn-primary btn-sm" data-adm-status="validated" data-id="' + r.id + '">Valider</button>' : '') + (r.status !== 'rejected' ? '<button class="btn btn-ghost btn-sm" data-adm-status="rejected" data-id="' + r.id + '">Refuser</button>' : '') + (r.status !== 'pending' ? '<button class="btn btn-ghost btn-sm" data-adm-status="pending" data-id="' + r.id + '">Remettre en attente</button>' : '') +
