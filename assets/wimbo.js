@@ -14,7 +14,7 @@ const BUILD_DATE = '2026-11-16';
 const CONFIG = {
   DEMO_MODE: true,                 // affiche le catalogue d'exemple
   DEMO_NOTICE: true,               // mention discrète en pied de page
-  VERSION: '2.9',
+  VERSION: '2.9.1',
   SITE_URL: 'https://wimboartistes.com',
   CONTACT_EMAIL: 'contact@wimboartistes.com',   // communication
   HELLO_EMAIL: 'hello@wimboartistes.com',       // emails automatiques (mots de passe, notifications)
@@ -746,6 +746,9 @@ const LANGS = {
 };
 let LANG = (function () {
   let l = null; try { l = JSON.parse(localStorage.getItem('wimbo_lang')); } catch (e) {}
+  /* Robots de recherche (Google, Bing…) : toujours la version française, langue de référence du site
+     (sinon Google, qui visite avec un navigateur en anglais, enregistre la version anglaise) */
+  if (!l && /bot|crawl|spider|slurp|google|bingpreview|lighthouse|headless|facebookexternalhit/i.test(String(navigator.userAgent || ''))) l = 'fr';
   if (!l) l = String((navigator.language || 'fr')).slice(0, 2).toLowerCase();
   return LANGS[l] ? l : 'fr';
 })();
