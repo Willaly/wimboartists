@@ -1,7 +1,7 @@
-/* Wimbo — site généré le 2026-11-15 — sources : wimbo-site/src */
+/* Wimbo — site généré le 2026-11-16 — sources : wimbo-site/src */
 const LOGO_LIGHT = '/assets/logo-light.png';
 const LOGO_DARK = '/assets/logo-dark.png';
-const BUILD_DATE = '2026-11-15';
+const BUILD_DATE = '2026-11-16';
 /* =====================================================================
    WIMBO — Données du site (version de présentation)
    ---------------------------------------------------------------------
@@ -227,26 +227,6 @@ const DEMO_ARTISTS = [
     montage: "1 h 30 d'installation. Déplacements en France facturés au réel (vol + transport matériel)."
   },
   {
-    slug: 'quatuor-lumiere', name: 'Quatuor Lumière', tagline: 'Quatuor à cordes · classique & pop',
-    type: 'ensemble', formation: ['Duo', 'Trio', 'Quatuor'],
-    members: [{ n: 'Claire Dumont', r: ['Violon'] }, { n: 'Hugo Martel', r: ['Violon'] }, { n: 'Anaïs Leroy', r: ['Alto'] }, { n: 'Victor Chen', r: ['Violoncelle'] }],
-    city: 'Paris', region: 'Île-de-France', country: 'FR', zone: 'Toute la France',
-    serves: ['Paris', 'Versailles', 'Fontainebleau', 'Chantilly', 'Lille', 'Tours'],
-    genres: ['classique', 'pop'], instruments: ['violoniste', 'violoncelliste'],
-    events: ['mariage', 'ceremonie', 'cocktail-diner', 'entreprise', 'bapteme-communion'],
-    priceMin: 1200, priceMax: 2400, premium: true, verified: true, languages: ['Français', 'Anglais'],
-    since: 2013, bookings: 158, responseTime: '3 h',
-    cover: P.cellist, avatar: P.womanViolin,
-    gallery: [P.cellist, P.violins, P.womanViolin, P.violinB, P.gala, P.weddingBride],
-    videos: [{ t: 'Canon de Pachelbel — entrée de la mariée', d: '2:58', img: P.violins }, { t: 'Viva la vida — version quatuor', d: '3:20', img: P.womanViolin }],
-    description: "Quatre musiciens issus des conservatoires nationaux pour sublimer vos cérémonies. Du Canon de Pachelbel aux arrangements de Coldplay ou d'Ed Sheeran, nous construisons avec vous la bande-son de votre journée, de l'entrée à la sortie des mariés.",
-    experience: "Plus de 600 cérémonies depuis 2013, en France et en Europe : mariages dans les châteaux, réceptions d'ambassade, galas et lancements de produits.",
-    formationText: "Quatuor complet, ou formules réduites en duo (violon, violoncelle) et en trio.",
-    repertoire: "Bach, Vivaldi, Mozart, Pachelbel, Debussy, musiques de films (Hans Zimmer, Morricone) et plus de 80 arrangements pop.",
-    logistique: "Acoustique. Pupitres, lumières de pupitre et tenue de soirée. 4 chaises sans accoudoirs à prévoir.",
-    montage: "Installation en 10 minutes. Possibilité de jouer en extérieur sous abri."
-  },
-  {
     slug: 'los-compadres', name: 'Los Compadres', tagline: 'Salsa, cumbia & latino live',
     type: 'groupe', formation: ['Groupe'],
     members: [{ n: 'Diego Alvarez', r: ['Chant', 'Guitare'] }, { n: 'Rafael Ortega', r: ['Trompette'] }, { n: 'Sofia Mendes', r: ['Percussions'] }, { n: 'Julien Costa', r: ['Piano'] }, { n: 'Karim Belhadj', r: ['Basse'] }],
@@ -403,8 +383,6 @@ const DEMO_REVIEWS = [
   { a: 'dj-kaito', n: 'Ana & Mickaël', e: 'Mariage franco-portugais', d: '2026-08-08', s: [5,5,5,5], t: "On cherchait un DJ capable de mélanger kizomba, variété portugaise et hits français : Kaïto a fait danser nos deux familles toute la nuit. On a tout organisé depuis Paris sans stress.", r: "Obrigado Ana & Mickaël, quelle soirée à Sintra !" },
   { a: 'dj-kaito', n: 'Joana P.', e: 'Anniversaire 30 ans', d: '2026-05-30', s: [5,5,5,5], t: "Ambiance de folie, il a parfaitement lu le public. Matériel au top." },
   { a: 'dj-kaito', n: 'Startup Lisboa Hub', e: 'Fête de fin d\'année', d: '2025-12-12', s: [5,4,5,5], t: "Super set afro-house, nos équipes en parlent encore." },
-  { a: 'quatuor-lumiere', n: 'Ambassade (Paris 16e)', e: 'Réception officielle', d: '2026-06-03', s: [5,5,5,5], t: "Prestation impeccable, tenue et répertoire parfaitement adaptés au protocole." },
-  { a: 'quatuor-lumiere', n: 'Famille Morel', e: 'Baptême', d: '2026-04-12', s: [5,5,5,5], t: "En duo pour le baptême de notre fils, un moment d'une grande douceur." },
   { a: 'los-compadres', n: 'Nadia S.', e: 'Mariage', d: '2026-07-18', s: [5,4,5,5], t: "L'initiation salsa pendant le premier set a été le moment préféré de nos invités. Une énergie folle." },
   { a: 'los-compadres', n: 'Olivier T.', e: 'Anniversaire 50 ans', d: '2026-05-09', s: [5,5,4,5], t: "Groupe généreux et très bons musiciens, tout le monde a dansé." },
   { a: 'kalinda-kreyol', n: 'Laetitia & Johan', e: 'Mariage au Gosier', d: '2026-07-25', s: [5,5,5,5], t: "Nous vivons à Paris et avons organisé notre mariage en Guadeloupe à distance. Le groupe a été adorable et le léwòz final a réuni toutes les générations.", r: "Mèsi anpil, nou té kontan anpil jwé pou zot !" },
@@ -1643,7 +1621,7 @@ function pArtistLanding() {
   const quotes = CONFIG.DEMO_MODE ? [
     ['elise-marceau', "Je ne cours plus après les demandes : elles arrivent qualifiées, avec la date, le lieu et le budget. Et le paiement tombe à l'heure."],
     ['dj-kaito', "Wimbo me permet de jouer pour les familles franco-portugaises des deux côtés de la frontière, sans me noyer dans la paperasse."],
-    ['quatuor-lumiere', "Les clients savent exactement ce qu'ils paient, cotisations comprises. Fini les négociations gênantes au moment du devis."]
+    ['los-compadres', "Les clients savent exactement ce qu'ils paient, cotisations comprises. Fini les négociations gênantes au moment du devis."]
   ] : [];
   const html =
   '<section class="hero"><div class="hero-bg" style="background-image:url(\'' + U(P.womanGuitarStage, 2000) + '\')"></div><div class="hero-shape"></div><div class="wrap hero-inner">' +
