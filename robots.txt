@@ -3,5 +3,6 @@ Allow: /
 Disallow: /admin
 Disallow: /espace-artiste
 Disallow: /mon-espace
+Disallow: /questionnaire
 
 Sitemap: https://wimboartistes.com/sitemap.xml
